@@ -3,7 +3,8 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 public class Percolation {
     private final int n;
     private final boolean[][] grid;
-    private final WeightedQuickUnionUF unionFind;
+    private final WeightedQuickUnionUF percolationUF;
+    private final WeightedQuickUnionUF fullnessUF;
     private int numberOfOpenSites;
 
     // creates n-by-n grid, with all sites initially blocked
@@ -15,7 +16,8 @@ public class Percolation {
         this.n = n;
         this.grid = new boolean[n][n];
 
-        this.unionFind = new WeightedQuickUnionUF(n * n + 2);
+        this.percolationUF = new WeightedQuickUnionUF(n * n + 2);
+        this.fullnessUF = new WeightedQuickUnionUF(n * n + 1);
 
         this.numberOfOpenSites = 0;
     }
@@ -36,23 +38,28 @@ public class Percolation {
 
         int flatCoordinate = this.flatten(row, col);
         if (row > 0 && this.grid[row - 1][col]) {
-            this.unionFind.union(flatCoordinate, this.flatten(row - 1, col));
+            this.percolationUF.union(flatCoordinate, this.flatten(row - 1, col));
+            this.fullnessUF.union(flatCoordinate, this.flatten(row - 1, col));
         }
         if (row < n - 1 && this.grid[row + 1][col]) {
-            this.unionFind.union(flatCoordinate, this.flatten(row + 1, col));
+            this.percolationUF.union(flatCoordinate, this.flatten(row + 1, col));
+            this.fullnessUF.union(flatCoordinate, this.flatten(row + 1, col));
         }
         if (col > 0 && this.grid[row][col - 1]) {
-            this.unionFind.union(flatCoordinate, this.flatten(row, col - 1));
+            this.percolationUF.union(flatCoordinate, this.flatten(row, col - 1));
+            this.fullnessUF.union(flatCoordinate, this.flatten(row, col - 1));
         }
         if (col < n - 1 && this.grid[row][col + 1]) {
-            this.unionFind.union(flatCoordinate, this.flatten(row, col + 1));
+            this.percolationUF.union(flatCoordinate, this.flatten(row, col + 1));
+            this.fullnessUF.union(flatCoordinate, this.flatten(row, col + 1));
         }
 
         if (row == 0) {
-            this.unionFind.union(flatCoordinate, this.n * this.n);
+            this.percolationUF.union(flatCoordinate, this.n * this.n);
+            this.fullnessUF.union(flatCoordinate, this.n * this.n);
         }
         if (row == this.n - 1) {
-            this.unionFind.union(flatCoordinate, this.n * this.n + 1);
+            this.percolationUF.union(flatCoordinate, this.n * this.n + 1);
         }
     }
 
@@ -71,7 +78,7 @@ public class Percolation {
 
         int flatCoordinate = this.flatten(row, col);
 
-        return this.unionFind.find(flatCoordinate) == this.unionFind.find(this.n * this.n);
+        return this.fullnessUF.find(flatCoordinate) == this.fullnessUF.find(this.n * this.n);
     }
 
     // returns the number of open sites
@@ -81,7 +88,7 @@ public class Percolation {
 
     // does the system percolate?
     public boolean percolates() {
-        return this.unionFind.find(this.n * this.n) == this.unionFind.find(this.n * this.n + 1);
+        return this.percolationUF.find(this.n * this.n) == this.percolationUF.find(this.n * this.n + 1);
     }
 
     private int flatten(int row, int col) {
@@ -98,13 +105,5 @@ public class Percolation {
 
     // test client (optional)
     public static void main(String[] args) {
-        Percolation percolation = new Percolation(2);
-
-        percolation.open(1, 1);
-        percolation.open(2, 1);
-
-        System.out.println(percolation.isFull(1, 2));
-
-        System.out.println(percolation.percolates());
     }
 }
